@@ -31,12 +31,14 @@ class CoingeckoClient:
         EthereumNetwork.METIS_ANDROMEDA_MAINNET: "metis-andromeda",
         EthereumNetwork.OPTIMISM: "optimistic-ethereum",
         EthereumNetwork.POLYGON: "polygon-pos",
+        EthereumNetwork.SYSCOIN: "syscoin",
     }
     base_url = "https://api.coingecko.com/"
 
     def __init__(self, network: Optional[EthereumNetwork] = None):
         self.http_session = requests.Session()
         self.asset_platform = self.ASSET_BY_NETWORK.get(network, "ethereum")
+
 
     @classmethod
     def supports_network(cls, network: EthereumNetwork):
@@ -142,3 +144,6 @@ class CoingeckoClient:
 
     def get_metis_usd_price(self) -> float:
         return self.get_price("metis-token")
+
+    def get_sys_usd_price(self) -> float:
+        return self.get_price("syscoin")

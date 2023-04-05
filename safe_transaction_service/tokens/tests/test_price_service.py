@@ -11,7 +11,7 @@ from gnosis.eth.oracles import KyberOracle, OracleException, UnderlyingToken
 from safe_transaction_service.history.tests.utils import just_test_if_mainnet_node
 from safe_transaction_service.utils.redis import get_redis
 
-from ..clients import CannotGetPrice, CoingeckoClient, KrakenClient, KucoinClient
+from ..clients import CannotGetPrice, CoingeckoClient, KrakenClient, KucoinClient, BinanceClient
 from ..services.price_service import PriceService, PriceServiceProvider
 
 
@@ -162,6 +162,12 @@ class TestPriceService(TestCase):
             price_service.cache_native_coin_usd_price.clear()
             self.assertEqual(price_service.get_xdc_usd_price(), 7.7)
 
+        # SYSCOIN
+        price_service.ethereum_network = EthereumNetwork.SYSCOIN_MAINNET
+        with mock.patch.object(BinanceClient, "get_sys_usd_price", return_value=8.8):
+            price_service.cache_eth_price.clear()
+            self.assertEqual(price_service.get_native_coin_usd_price(), 8.8)
+
     @mock.patch.object(CoingeckoClient, "get_bnb_usd_price", return_value=3.0)
     @mock.patch.object(KucoinClient, "get_bnb_usd_price", return_value=5.0)
     def test_get_binance_usd_price(
@@ -221,6 +227,28 @@ class TestPriceService(TestCase):
         get_matic_usd_price_binance_mock.side_effect = CannotGetPrice
         price = price_service.get_matic_usd_price()
         self.assertEqual(price, 3.0)
+
+    @mock.patch.object(BinanceClient, "get_sys_usd_price", return_value=3.0)
+    @mock.patch.object(KucoinClient, "get_sys_usd_price", return_value=5.0)
+    @mock.patch.object(CoingeckoClient, "get_sys_usd_price", return_value=7.0)
+    def test_get_sys_usd_price(
+        self,
+        get_sys_usd_price_binance_mock: MagicMock,
+        get_sys_usd_price_kucoin_mock: MagicMock,
+        get_sys_usd_price_coingecko_mock: MagicMock,
+    ):
+        price_service = self.price_service
+
+        price = price_service.get_sys_usd_price()
+        self.assertEqual(price, 3.0)
+
+        get_sys_usd_price_kucoin_mock.side_effect = CannotGetPrice
+        price = price_service.get_sys_usd_price()
+        self.assertEqual(price, 5.0)
+
+        get_sys_usd_price_coingecko_mock.side_effect = CannotGetPrice
+        price = price_service.get_sys_usd_price()
+        self.assertEqual(price, 7.0)
 
     def test_get_token_eth_value(self):
         mainnet_node = just_test_if_mainnet_node()

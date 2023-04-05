@@ -84,3 +84,10 @@ class KucoinClient:
         :raises: CannotGetPrice
         """
         return self._get_price("XDC-USDT")
+
+    def get_sys_usd_price(self) -> float:
+        """
+        :return: current USD price for SYS Token
+        :raises: CannotGetPrice
+        """
+        return self._get_price("SYS-USDT")
