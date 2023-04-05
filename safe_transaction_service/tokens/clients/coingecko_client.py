@@ -43,7 +43,7 @@ class CoingeckoClient:
             self.asset_platform = "kucoin-community-chain"
         elif network == EthereumNetwork.METIS_ANDROMEDA_MAINNET:
             self.asset_platform = "metis-andromeda"
-        elif network == EthereumNetwork.SYSCOIN:
+        elif network == EthereumNetwork.SYSCOIN_MAINNET:
             self.asset_platform = "syscoin"
         else:
             self.asset_platform = "ethereum"
