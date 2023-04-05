@@ -49,3 +49,10 @@ class BinanceClient:  # pragma: no cover
         :raises: CannotGetPrice
         """
         return self._get_price("MATICUSDT")
+
+    def get_sys_usd_price(self) -> float:
+        """
+        :return: current USD price for Syscoin
+        :raises: CannotGetPrice
+        """
+        return self._get_price("SYSUSDT")

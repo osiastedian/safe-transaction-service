@@ -194,6 +194,16 @@ class PriceService:
         except CannotGetPrice:
             return self.coingecko_client.get_kcs_usd_price()
 
+    def get_sys_usd_price(self) -> float:
+        try:
+            return self.binance_client.get_sys_usd_price()
+        except CannotGetPrice:
+            try:
+                return self.kucoin_client.get_sys_usd_price()
+            except CannotGetPrice:
+                return self.coingecko_client.get_sys_usd_price()
+
+
     @cachedmethod(cache=operator.attrgetter("cache_eth_price"))
     @cache_memoize(60 * 30, prefix="balances-get_eth_usd_price")  # 30 minutes
     def get_native_coin_usd_price(self) -> float:
@@ -274,6 +284,12 @@ class PriceService:
             EthereumNetwork.XDC_APOTHEM_NETWORK,
         ):
             return self.get_xdc_usd_price()
+        elif self.ethereum_network in (
+            EthereumNetwork.SYSCOIN_MAINNET,
+            EthereumNetwork.SYSCOIN_TANENBAUM_TESTNET,
+            EthereumNetwork.ROLLUX_TESTNET,
+        ):
+            return self.get_sys_usd_price()
         else:
             try:
                 return self.kraken_client.get_eth_usd_price()

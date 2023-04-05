@@ -43,6 +43,8 @@ class CoingeckoClient:
             self.asset_platform = "kucoin-community-chain"
         elif network == EthereumNetwork.METIS_ANDROMEDA_MAINNET:
             self.asset_platform = "metis-andromeda"
+        elif network == EthereumNetwork.SYSCOIN:
+            self.asset_platform = "syscoin"
         else:
             self.asset_platform = "ethereum"
 
@@ -162,3 +164,6 @@ class CoingeckoClient:
 
     def get_metis_usd_price(self) -> float:
         return self.get_price("metis-token")
+
+    def get_sys_usd_price(self) -> float:
+        return self.get_price("syscoin")
