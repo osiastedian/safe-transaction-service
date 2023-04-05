@@ -39,7 +39,7 @@ from gnosis.eth.oracles import (
 
 from safe_transaction_service.utils.redis import get_redis
 
-from ..clients import CannotGetPrice, CoingeckoClient, KrakenClient, KucoinClient
+from ..clients import CannotGetPrice, CoingeckoClient, KrakenClient, KucoinClient, BinanceClient
 from ..tasks import EthValueWithTimestamp, calculate_token_eth_price_task
 
 logger = get_task_logger(__name__)
@@ -75,6 +75,7 @@ class PriceService:
         self.ethereum_network = self.ethereum_client.get_network()
         self.redis = redis
         self.coingecko_client = CoingeckoClient(self.ethereum_network)
+        self.binance_client = BinanceClient()
         self.kraken_client = KrakenClient()
         self.kucoin_client = KucoinClient()
         self.cache_eth_price = TTLCache(
