@@ -39,7 +39,6 @@ class CoingeckoClient:
         self.http_session = requests.Session()
         self.asset_platform = self.ASSET_BY_NETWORK.get(network, "ethereum")
 
-
     @classmethod
     def supports_network(cls, network: EthereumNetwork):
         return network in cls.ASSET_BY_NETWORK
