@@ -31,7 +31,10 @@ class CoingeckoClient:
         EthereumNetwork.METIS_ANDROMEDA_MAINNET: "metis-andromeda",
         EthereumNetwork.OPTIMISM: "optimistic-ethereum",
         EthereumNetwork.POLYGON: "polygon-pos",
-        EthereumNetwork.SYSCOIN: "syscoin",
+        EthereumNetwork.SYSCOIN_MAINNET: "syscoin",
+        EthereumNetwork.SYSCOIN_TANENBAUM_TESTNET: "syscoin",
+        # ~ EthereumNetwork.ROLLUX_MAINNET: "syscoin",
+        EthereumNetwork.ROLLUX_TESTNET: "syscoin",
     }
     base_url = "https://api.coingecko.com/"
 

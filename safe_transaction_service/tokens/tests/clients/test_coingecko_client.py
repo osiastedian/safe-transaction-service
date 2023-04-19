@@ -23,6 +23,7 @@ class TestCoingeckoClient(TestCase):
         )
         self.assertTrue(CoingeckoClient.supports_network(EthereumNetwork.POLYGON))
         self.assertTrue(CoingeckoClient.supports_network(EthereumNetwork.GNOSIS))
+        self.assertTrue(CoingeckoClient.supports_network(EthereumNetwork.SYSCOIN_MAINNET))
 
         # Test Mainnet
         coingecko_client = CoingeckoClient()
@@ -44,6 +45,10 @@ class TestCoingeckoClient(TestCase):
         polygon_coingecko_client = CoingeckoClient(EthereumNetwork.POLYGON)
         bnb_pos_address = "0xb33EaAd8d922B1083446DC23f610c2567fB5180f"
         self.assertGreater(polygon_coingecko_client.get_token_price(bnb_pos_address), 0)
+
+        # Test Syscoin
+        syscoin_coingecko_client = CoingeckoClient(EthereumNetwork.SYSCOIN_MAINNET)
+        self.assertGreater(syscoin_coingecko_client.get_price("syscoin"), 0)
 
     @skip_on(CoingeckoRateLimitError, reason="Coingecko rate limit reached")
     def test_get_logo_url(self):

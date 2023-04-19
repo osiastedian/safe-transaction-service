@@ -26,6 +26,22 @@ TOKEN_LIST_BY_NETWORK = {
         "PancakeSwap",
     ),
     EthereumNetwork.AURORA_MAINNET: ("https://aurora.dev/tokens.json", "Official"),
+    EthereumNetwork.SYSCOIN_MAINNET: (
+        "https://raw.githubusercontent.com/Pollum-io/pegasys-tokenlists/master/pegasys.tokenlist.json",
+        "Official"
+    ),
+    EthereumNetwork.SYSCOIN_TANENBAUM_TESTNET: (
+        "https://raw.githubusercontent.com/Pollum-io/pegasys-tokenlists/master/tanembaum.tokenlist.json",
+        "Official"
+    ),
+    # ~ EthereumNetwork.ROLLUX_MAINNET: (
+        # ~ "https://example.com/tokenlist.json",
+        # ~ "Official"
+    # ~ ),
+    EthereumNetwork.ROLLUX_TESTNET: (
+        "https://static.luxy.io/ipfs/QmPg3CUHkt8xxuzA3XkFGdSV9wvdnbW4VDkr2RQY6m1WKy",
+        "Official"
+    ),
 }
 
 
