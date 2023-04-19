@@ -163,10 +163,10 @@ class TestPriceService(TestCase):
             self.assertEqual(price_service.get_xdc_usd_price(), 7.7)
 
         # SYSCOIN
-        price_service.ethereum_network = EthereumNetwork.SYSCOIN_MAINNET
         with mock.patch.object(BinanceClient, "get_sys_usd_price", return_value=8.8):
-            price_service.cache_eth_price.clear()
-            self.assertEqual(price_service.get_native_coin_usd_price(), 8.8)
+            price_service.ethereum_network = EthereumNetwork.SYSCOIN_MAINNET
+            price_service.cache_native_coin_usd_price.clear()
+            self.assertEqual(price_service.get_sys_usd_price(), 8.8)
 
     @mock.patch.object(CoingeckoClient, "get_bnb_usd_price", return_value=3.0)
     @mock.patch.object(KucoinClient, "get_bnb_usd_price", return_value=5.0)
