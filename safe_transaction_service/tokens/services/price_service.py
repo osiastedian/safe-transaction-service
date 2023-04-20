@@ -302,7 +302,7 @@ class PriceService:
         elif self.ethereum_network in (
             EthereumNetwork.SYSCOIN_MAINNET,
             EthereumNetwork.SYSCOIN_TANENBAUM_TESTNET,
-            EthereumNetwork.ROLLUX_MAINNET,
+            # ~ EthereumNetwork.ROLLUX_MAINNET,
             EthereumNetwork.ROLLUX_TESTNET,
         ):
             return self.get_sys_usd_price()
