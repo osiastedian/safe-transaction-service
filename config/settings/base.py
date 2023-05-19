@@ -236,17 +236,40 @@ CELERY_ROUTES = (
     [
         (
             "safe_transaction_service.history.tasks.retry_get_metadata_task",
-            {"queue": "tokens"},
+            {"queue": "tokens", "delivery_mode": "transient"},
         ),
         (
             "safe_transaction_service.history.tasks.send_webhook_task",
-            {"queue": "webhooks"},
+            {"queue": "webhooks", "delivery_mode": "transient"},
         ),
-        ("safe_transaction_service.history.tasks.*", {"queue": "indexing"}),
-        ("safe_transaction_service.contracts.tasks.*", {"queue": "contracts"}),
-        ("safe_transaction_service.notifications.tasks.*", {"queue": "notifications"}),
-        ("safe_transaction_service.tokens.tasks.*", {"queue": "tokens"}),
-        ("safe_transaction_service.analytics.tasks.*", {"queue": "contracts"}),
+        (
+            "safe_transaction_service.history.tasks.reindex_mastercopies_last_hours_task",
+            {"queue": "indexing"},
+        ),
+        (
+            "safe_transaction_service.history.tasks.reindex_erc20_erc721_last_hours_task",
+            {"queue": "indexing"},
+        ),
+        (
+            "safe_transaction_service.history.tasks.*",
+            {"queue": "indexing", "delivery_mode": "transient"},
+        ),
+        (
+            "safe_transaction_service.contracts.tasks.*",
+            {"queue": "contracts", "delivery_mode": "transient"},
+        ),
+        (
+            "safe_transaction_service.notifications.tasks.*",
+            {"queue": "notifications", "delivery_mode": "transient"},
+        ),
+        (
+            "safe_transaction_service.tokens.tasks.*",
+            {"queue": "tokens", "delivery_mode": "transient"},
+        ),
+        (
+            "safe_transaction_service.analytics.tasks.*",
+            {"queue": "contracts", "delivery_mode": "transient"},
+        ),
     ],
 )
 
@@ -377,14 +400,31 @@ REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 # Ethereum RPC
 # ------------------------------------------------------------------------------
 ETHEREUM_NODE_URL = env("ETHEREUM_NODE_URL", default=None)
+
+# Tracing indexing configuration (not useful for L2 indexing)
+# ------------------------------------------------------------------------------
 ETHEREUM_TRACING_NODE_URL = env("ETHEREUM_TRACING_NODE_URL", default=None)
 ETH_INTERNAL_TXS_BLOCK_PROCESS_LIMIT = env.int(
     "ETH_INTERNAL_TXS_BLOCK_PROCESS_LIMIT", default=10_000
 )
-ETH_INTERNAL_NO_FILTER = env.bool("ETH_INTERNAL_NO_FILTER", default=False)
+ETH_INTERNAL_TXS_BLOCKS_TO_REINDEX_AGAIN = env.int(
+    "ETH_INTERNAL_TXS_BLOCKS_TO_REINDEX_AGAIN", default=6
+)
+ETH_INTERNAL_TXS_NUMBER_TRACE_BLOCKS = env.int(
+    "ETH_INTERNAL_TXS_NUMBER_TRACE_BLOCKS", default=10
+)  # Use `trace_block` for last `number_trace_blocks` blocks indexing
+ETH_INTERNAL_NO_FILTER = env.bool(
+    "ETH_INTERNAL_NO_FILTER", default=False
+)  # Don't use `trace_filter`, only `trace_block` and `trace_transaction`
 ETH_INTERNAL_TRACE_TXS_BATCH_SIZE = env.int(
     "ETH_INTERNAL_TRACE_TXS_BATCH_SIZE", default=0
-)
+)  # Number of `trace_transaction` calls allowed in the same RPC batch call, as results can be quite big
+ETH_INTERNAL_TX_DECODED_PROCESS_BATCH = env.int(
+    "ETH_INTERNAL_TX_DECODED_PROCESS_BATCH", default=500
+)  # Number of InternalTxDecoded to process together. Keep it low to be memory friendly
+
+# Event indexing configuration (L2 and ERC20/721)
+# ------------------------------------------------------------------------------
 ETH_L2_NETWORK = env.bool(
     "ETH_L2_NETWORK", default=not ETHEREUM_TRACING_NODE_URL
 )  # Use L2 event indexing
@@ -394,6 +434,9 @@ ETH_EVENTS_BLOCK_PROCESS_LIMIT = env.int(
 ETH_EVENTS_BLOCK_PROCESS_LIMIT_MAX = env.int(
     "ETH_EVENTS_BLOCK_PROCESS_LIMIT_MAX", default=0
 )  # Maximum number of blocks to process together when searching for events. 0 == no limit.
+ETH_EVENTS_BLOCKS_TO_REINDEX_AGAIN = env.int(
+    "ETH_EVENTS_BLOCKS_TO_REINDEX_AGAIN", default=10
+)  # Blocks to reindex again every indexer run when service is synced. Useful for RPCs not reliable
 ETH_EVENTS_GET_LOGS_CONCURRENCY = env.int(
     "ETH_EVENTS_GET_LOGS_CONCURRENCY", default=20
 )  # Number of concurrent requests to `getLogs`
@@ -406,9 +449,6 @@ ETH_EVENTS_UPDATED_BLOCK_BEHIND = env.int(
 ETH_REORG_BLOCKS = env.int(
     "ETH_REORG_BLOCKS", default=100 if ETH_L2_NETWORK else 10
 )  # Number of blocks from the current block number needed to consider a block valid/stable
-ETH_INTERNAL_TX_DECODED_PROCESS_BATCH = env.int(
-    "ETH_INTERNAL_TX_DECODED_PROCESS_BATCH", default=500
-)  # Number of InternalTxDecoded to process together
 
 # Tokens
 # ------------------------------------------------------------------------------
@@ -420,6 +460,9 @@ TOKENS_ENS_IMAGE_URL = env.str(
     "TOKENS_ENS_IMAGE_URL",
     default="https://safe-transaction-assets.safe.global/tokens/logos/ENS.png",
 )
+TOKENS_ERC20_GET_BALANCES_BATCH = env.int(
+    "TOKENS_ERC20_GET_BALANCES_BATCH", default=2_000
+)  # Number of tokens to get balances from in the same request. From 2_500 some nodes raise HTTP 413
 
 # Notifications
 # ------------------------------------------------------------------------------

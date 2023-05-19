@@ -5,7 +5,7 @@ from typing import Iterator, List, Optional, Sequence
 from django.db.models import QuerySet
 
 from eth_typing import ChecksumAddress
-from web3.contract import ContractEvent
+from web3.contract.contract import ContractEvent
 from web3.types import EventData, LogReceipt
 
 from gnosis.eth import EthereumClient
@@ -100,15 +100,24 @@ class Erc20EventsIndexer(EventsIndexer):
             )
 
         if parameter_addresses:
-            return transfer_events
+            return [
+                transfer_event
+                for transfer_event in transfer_events
+                if transfer_event["blockHash"]
+                != transfer_event["transactionHash"]  # CELO ERC20 indexing
+            ]
 
         # Every ERC20/721 event is returned, we need to filter ourselves
         addresses_set = set(addresses)
         return [
             transfer_event
             for transfer_event in transfer_events
-            if transfer_event["args"]["to"] in addresses_set
-            or transfer_event["args"]["from"] in addresses_set
+            if transfer_event["blockHash"]
+            != transfer_event["transactionHash"]  # CELO ERC20 indexing
+            and (
+                transfer_event["args"]["to"] in addresses_set
+                or transfer_event["args"]["from"] in addresses_set
+            )
         ]
 
     def _process_decoded_element(self, decoded_element: EventData) -> None:

@@ -120,6 +120,9 @@ class TransferDict(TypedDict):
     execution_date: datetime.datetime
     _token_id: int
     token_address: str
+    # Next parameters will be used to build a unique transfer id
+    _log_index: int
+    _trace_address: str
 
 
 class BulkCreateSignalMixin:
@@ -178,6 +181,10 @@ class IndexingStatus(models.Model):
         choices=[(tag.value, tag.name) for tag in IndexingStatusType],
     )
     block_number = models.PositiveIntegerField(db_index=True)
+
+    def __str__(self):
+        indexing_status_type = IndexingStatusType(self.indexing_type).name
+        return f"{indexing_status_type} - {self.block_number}"
 
 
 class Chain(models.Model):
@@ -338,7 +345,7 @@ class EthereumTxManager(models.Manager):
             nonce=tx["nonce"],
             to=tx.get("to"),
             value=tx["value"],
-            type=int(tx.get("type", "0x0"), 0),
+            type=tx.get("type", 0),
         )
 
 
@@ -431,6 +438,26 @@ class TokenTransferQuerySet(models.QuerySet):
     def token_txs(self):
         raise NotImplementedError
 
+    def token_transfer_values(
+        self,
+        erc20_queryset: QuerySet,
+        erc721_queryset: QuerySet,
+    ) -> TransferDict:
+        values = [
+            "block",
+            "transaction_hash",
+            "to",
+            "_from",
+            "_value",
+            "execution_date",
+            "_token_id",
+            "token_address",
+            "_log_index",
+        ]
+        return erc20_queryset.values(*values).union(
+            erc721_queryset.values(*values), all=True
+        )
+
 
 class TokenTransferManager(BulkCreateSignalMixin, models.Manager):
     def tokens_used_by_address(self, address: ChecksumAddress) -> Set[ChecksumAddress]:
@@ -508,6 +535,8 @@ class ERC20TransferQuerySet(TokenTransferQuerySet):
             execution_date=F("timestamp"),
             _token_id=RawSQL("NULL::numeric", ()),
             token_address=F("address"),
+            _log_index=F("log_index"),
+            _trace_address=RawSQL("NULL", ()),
         )
 
 
@@ -618,6 +647,8 @@ class ERC721TransferQuerySet(TokenTransferQuerySet):
             execution_date=F("timestamp"),
             _token_id=F("token_id"),
             token_address=F("address"),
+            _log_index=F("log_index"),
+            _trace_address=RawSQL("NULL", ()),
         )
 
 
@@ -754,6 +785,8 @@ class InternalTxQuerySet(models.QuerySet):
             execution_date=F("timestamp"),
             _token_id=RawSQL("NULL::numeric", ()),
             token_address=Value(None, output_field=EthereumAddressV2Field()),
+            _log_index=RawSQL("NULL::numeric", ()),
+            _trace_address=F("trace_address"),
         )
 
     def ether_txs_for_address(self, address: str):
@@ -831,6 +864,8 @@ class InternalTxQuerySet(models.QuerySet):
             "execution_date",
             "_token_id",
             "token_address",
+            "_log_index",
+            "_trace_address",
         ]
         return (
             ether_queryset.values(*values)
@@ -838,6 +873,24 @@ class InternalTxQuerySet(models.QuerySet):
             .union(erc721_queryset.values(*values), all=True)
             .order_by("-block")
         )
+
+    def ether_txs_values(
+        self,
+        ether_queryset: QuerySet,
+    ) -> TransferDict:
+        values = [
+            "block",
+            "transaction_hash",
+            "to",
+            "_from",
+            "_value",
+            "execution_date",
+            "_token_id",
+            "token_address",
+            "_log_index",
+            "_trace_address",
+        ]
+        return ether_queryset.values(*values)
 
     def can_be_decoded(self):
         """
@@ -1538,11 +1591,28 @@ class SafeMasterCopy(MonitoredAddress):
         ordering = ["tx_block_number"]
 
 
+class SafeContractManager(models.Manager):
+    def get_banned_safes(self) -> QuerySet[ChecksumAddress]:
+        return self.filter(banned=True).values_list("address", flat=True)
+
+
 class SafeContract(models.Model):
+    objects = SafeContractManager()
     address = EthereumAddressV2Field(primary_key=True)
     ethereum_tx = models.ForeignKey(
         EthereumTx, on_delete=models.CASCADE, related_name="safe_contracts"
     )
+    # Avoid to index events from problematic safes like non verified contracts
+    banned = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            Index(
+                name="history_safe_banned_idx",
+                fields=["banned"],
+                condition=Q(banned=True),
+            ),
+        ]
 
     def __str__(self):
         return f"Safe address={self.address} - ethereum-tx={self.ethereum_tx_id}"
