@@ -35,7 +35,7 @@ class CoingeckoClient:
         EthereumNetwork.CELO_MAINNET: "celo",
         EthereumNetwork.SYSCOIN_MAINNET: "syscoin",
         EthereumNetwork.SYSCOIN_TANENBAUM_TESTNET: "syscoin",
-        EthereumNetwork.ROLLUX_MAINNET: "syscoin",
+        EthereumNetwork.ROLLUX_MAINNET: "rollux",
         EthereumNetwork.ROLLUX_TESTNET: "syscoin",
     }
     base_url = "https://api.coingecko.com/"
